@@ -1,0 +1,155 @@
+---
+title: "Analysis of Annual Compensation in Information Technology"
+author: "Mark M. Young"
+date: "`r format(Sys.time(), '%B %d, %Y')`" # "2024-02-28"
+output:
+  word_document:
+    # To use `toc` (tabel of contents), after "knitting" the Word document:
+    #   1) open the Word document,
+    #   2) right-mouse click on the table of contents,
+    #   3) select Update Field,
+    #   4) select Update entire table,
+    #   5) click OK, then
+    #   6) Save the file.
+    toc: true
+    toc_depth: 3
+    #theme: united
+    number_sections: true
+    highlight: tango
+documentclass: report
+---
+
+```{r library-require, echo=FALSE, include=FALSE, warning=FALSE}
+repos = getOption("repos")
+repos["CRAN"] = "http://cran.us.r-project.org"
+options(repos = repos)
+
+if(!require(knitr)) install.packages("knitr")# this document
+if(!require(rmarkdown)) install.packages("rmarkdown")# this document
+if(!require(yaml)) install.packages("yaml")# this document
+if(!require(dplyr)) install.packages("dplyr")# mutate
+if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(ggpubr)) install.packages("ggpubr")# ggqqplot, ggscatter
+if(!require(magrittr)) install.packages("magrittr")# %>% operator
+if(!require(nortest)) install.packages("nortest")
+if(!require(openxlsx)) install.packages("openxlsx")
+if(!require(reshape2)) install.packages("reshape2")
+if(!require(stargazer)) install.packages("stargazer")
+if(!require(tidyr)) install.packages("tidyr")# separate_longer_delim
+if(!require(tidytext)) install.packages("tidytext")# unnest_tokens
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+
+wd <- "G:/My Drive/2024-01-CIS_663-Dev_Analytics_Apps/msu-663-project"
+setwd(wd)
+```
+
+# Abstract
+
+This research applies linear regression and graphical analysis to data from the 2022 StackOverflow.com Developer Survey, highlighting the significance of developer type, years of experience, and gender in information technology (IT).  Using voluntary responses from over 70,000 participants, insights were made into the association with the dependent variable annual compensation and among the independent variables developer's age, education level, years of experience, gender, organization size, position type, and remote work, with some used as control variables.  This report explains data, analysis, methods, and results from a graduate, educational setting.
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+# Introduction
+
+Compensation in IT is a widely discussed topic from multiple aspects.  Economists discuss the implications of onshore (domestic), offshore, and nearshore development (Nguyen 2022); managers discuss the cost of IT due to the ubiquity of IT in conducting business (Bajarin 2020); and professionals discuss job opportunities during periods of decreased IT demand, like in 2002 (Shim 2003), 2009 (Ballenstedt 2010), and 2023 (Inspirisys 2024).  This research focuses on the implications from the IT professionals' perspective.
+
+IT professionals must adapt to the changes and advancements in IT or their compensation will stagnate.  The aim of this research is to expose statistically significant variables which influence compensation.  With the results, IT professionals can make informed decisions when considering professional development, seeking new employment, or interested in changing to a different position type.
+
+# Literature Review
+
+#A generalized investigation was performed by Coursera.org using data from Dice.com, GlassDoor.com, et al. in March of 2024.  It revealed a wide range of compensation depending on living location and position type.  It found that simply moving from Michigan to California could increase an IT professional's salary by over 50%, but did not take into account the difference in the cost of living index of the respective locations (Coursera 2024).
+
+# Theory
+
+
+# Data
+
+The dataset available from StackOverflow.com is in CSV (Comma-Separated Value) format, contains 79 variables, is over 100 MB (megabytes), and can be viewed using a spreadsheet application like Microsoft Excel.  However, CSV data is a string of characters at its basis with no further meaning (e.g., 1.618 is a string of five characters, not a number).  Technically, R does not even assume the character strings can be legitimately interpreted as character data.  Furthermore, most of the variables of interest were answered in the survey from a list of options and some of those options represent a range of values.  Further still, a few values have a meaningful order to them.  For this reason, the values were converted for interpretability when plotting and performing numerical analysis.  The data is imported using the built-in R function ``read.csv``:
+
+## File Importing
+
+```{r importing the data}
+dat_file_name <- "stack-overflow-developer-survey-2022.survey_results_public.csv"
+dat_raw <- read.csv(dat_file_name)
+```
+
+## Variable Selection
+
+Although some variables did not play an eventual role in the results, a preliminary selection of variables was performed to reduce the data to twelve variables:
+
+```{r selecting the variables}
+keep_column_names <- c(
+	"Age", "ConvertedCompYearly", "Country", "DevType", 
+	"EdLevel", "Employment", "Ethnicity", "Gender",
+	"OrgSize", "RemoteWork", "ResponseId", "YearsCodePro"
+)
+# Only keep columns of interest.
+dat_selected <- dat_raw[keep_column_names]
+```
+
+## Variable Conversion
+
+### Numeric Variables
+
+The dependent variable for this analysis is annual compensation.  The ``ConvertedCompYearly`` column is used for this value because the ``CompFreq``, ``CompTotal``, ``Country``, and ``Currency`` columns would have be considered collectively with a specific date in order to convert the values to a common currency for comparison.  The values are explicitly converted to numeric values:
+
+```{r convert numerical variables}
+# Convert numerical variables.  Capture logarithmic values in case it is a multimodal distribution that needs to be split.
+dat_selected$ConvertedCompYearly.n <- as.numeric(as.character(dat_selected$ConvertedCompYearly))
+dat_selected$ConvertedCompYearly.log <- log(dat_selected$ConvertedCompYearly.n)
+```
+
+### Categorical Variables
+
+
+
+### Ordinal Variables
+
+
+
+## Variable Splitting
+
+
+
+# Methodology
+
+
+
+# Results
+
+
+
+# Implications
+
+
+
+# Conclusion
+
+cost of living index versus compensation
+
+# References
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+\setlength{\parskip}{8pt}
+Bajarin, Tim (April 14, 2020). Four Waves of Personal Computing and the PC’s New Role as an Essential Tool for Survival. Retrieved April 28, 2024 from https://www.forbes.com/sites/timbajarin/2020/04/14/four-waves-of-personal-computing-and-the-pcs-new-role-as-an-essential-tool-for-survival/
+
+Ballenstedt, Brittany (April 29, 2010). Tech Jobs Declined 4 Percent in 2009. Retrieved April 27, 2024 from https://www.nextgov.com/digital-government/2010/04/tech-jobs-declined-4-percent-in-2009/53257/
+#
+#Coursera Staff (March 13, 2024). IT Salary Overview: How Much Can You Make? Retrieved April 28, 2024 from https://www.coursera.org/articles/it-salaries-roles-location-and-experience
+
+Hlavac, Marek (2022). stargazer: Well-Formatted Regression and Summary Statistics Tables. https://CRAN.R-project.org/package=stargazer
+
+Inspirisys Solutions (March 5, 2024). Tech layoffs in 2023: Causes, Consequences and Affected Companies. Retrieved April 27, 2024 from https://www.linkedin.com/pulse/tech-layoffs-2023-causes-consequences-affected-companies-inspirisys-bbc6c
+
+Nguyen, Hieu (December 10, 2022). Is Outsourcing Good or Bad? The Economic Effects of Outsourcing. Retrieved April 27, 2024 from https://www.orientsoftware.com/blog/is-outsourcing-good-or-bad/
+
+Shim, Richard (November 19, 2003). A half-million tech jobs lost in 2002, study says. Retrieved April 27, 2024 from https://www.cnet.com/culture/a-half-million-tech-jobs-lost-in-2002-study-says/
+
+Xie, Y. (2021). knitr: A General-Purpose Package for Dynamic Report Generation in R. https://yihui.org/knitr/
+\endgroup
