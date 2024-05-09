@@ -16,6 +16,8 @@ output:
     #theme: united
     number_sections: true
     highlight: tango
+header-includes:
+  - \usepackage{xcolor}
 documentclass: report
 ---
 
@@ -27,16 +29,14 @@ options(repos = repos)
 if(!require(knitr)) install.packages("knitr")# this document
 if(!require(rmarkdown)) install.packages("rmarkdown")# this document
 if(!require(yaml)) install.packages("yaml")# this document
-if(!require(dplyr)) install.packages("dplyr")# mutate
+
 if(!require(ggplot2)) install.packages("ggplot2")
 if(!require(ggpubr)) install.packages("ggpubr")# ggqqplot, ggscatter
 if(!require(magrittr)) install.packages("magrittr")# %>% operator
-if(!require(nortest)) install.packages("nortest")
-if(!require(openxlsx)) install.packages("openxlsx")
-if(!require(reshape2)) install.packages("reshape2")
+if(!require(moments)) install.packages("moments")# kurtosis, skewness
+if(!require(nortest)) install.packages("nortest")# ad.test
 if(!require(stargazer)) install.packages("stargazer")
 if(!require(tidyr)) install.packages("tidyr")# separate_longer_delim
-if(!require(tidytext)) install.packages("tidytext")# unnest_tokens
 ```
 
 ```{r setup, include=FALSE}
@@ -50,26 +50,33 @@ setwd(wd)
 
 This research applies linear regression and graphical analysis to data from the 2022 StackOverflow.com Developer Survey, highlighting the significance of developer type, years of experience, and gender in information technology (IT).  Using voluntary responses from over 70,000 participants, insights were made into the association with the dependent variable annual compensation and among the independent variables developer's age, education level, years of experience, gender, organization size, position type, and remote work, with some used as control variables.  This report explains data, analysis, methods, and results from a graduate, educational setting.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
 # Introduction
 
-Compensation in IT is a widely discussed topic from multiple aspects.  Economists discuss the implications of onshore (domestic), offshore, and nearshore development (Nguyen 2022); managers discuss the cost of IT due to the ubiquity of IT in conducting business (Bajarin 2020); and professionals discuss job opportunities during periods of decreased IT demand, like in 2002 (Shim 2003), 2009 (Ballenstedt 2010), and 2023 (Inspirisys 2024).  This research focuses on the implications from the IT professionals' perspective.
+Compensation in IT is a widely discussed topic from multiple aspects.  Economists discuss the implications of onshore (domestic), offshore, and nearshore development (Nguyen, 2022); managers discuss the cost of IT due to the ubiquity of IT in conducting business (Bajarin, 2020); and professionals discuss job opportunities during periods of decreased IT demand, like in 2002 (Shim, 2003), 2009 (Ballenstedt, 2010), and 2023 (Inspirisys, 2024).  This research focuses on the implications from the IT professionals' perspective.
 
 IT professionals must adapt to the changes and advancements in IT or their compensation will stagnate.  The aim of this research is to expose statistically significant variables which influence compensation.  With the results, IT professionals can make informed decisions when considering professional development, seeking new employment, or interested in changing to a different position type.
 
 # Literature Review
 
-#A generalized investigation was performed by Coursera.org using data from Dice.com, GlassDoor.com, et al. in March of 2024.  It revealed a wide range of compensation depending on living location and position type.  It found that simply moving from Michigan to California could increase an IT professional's salary by over 50%, but did not take into account the difference in the cost of living index of the respective locations (Coursera 2024).
+#A generalized investigation was performed by Coursera.org using data from Dice.com, GlassDoor.com, et al. in March of 2024.  It revealed a wide range of compensation depending on living location and position type.  It found that simply moving from Michigan to California could increase an IT professional's salary by over 50%, but did not take into account the difference in the cost of living index of the respective locations (Coursera, 2024).
+
+Lorem ipsum
 
 # Theory
 
+Since World War II, especially since 1985, women are more likely to work in once exclusively male occupations and industries and vice versa (Nichols & Zimmerman, 2008).  This has helped reduce household income volatility, but has introduced controversy on a larger scale with one side of the gender lines claiming that another side is being paid more, or claiming that one side has lower expectation of productivity.  This study's aim is to analyze the voluntary survey results of over 70,000 respondents to determine if there is a statistically significant difference between genders, and discover other contributing variables using linear regression analysis.
+
+$H_{0}$: $Compensation_{Female} = Compensation_{Male} = Compensation_{Other}$
+
+$H_{1}$: $Compensation_{Female} \not= Compensation_{Male}$
+
+$H_{2}$: $Compensation_{Male} \not= Compensation_{Other}$
+
+$H_{3}$: $Compensation_{Other} \not= Compensation_{Female}$
 
 # Data
 
-The dataset available from StackOverflow.com is in CSV (Comma-Separated Value) format, contains 79 variables, is over 100 MB (megabytes), and can be viewed using a spreadsheet application like Microsoft Excel.  However, CSV data is a string of characters at its basis with no further meaning (e.g., 1.618 is a string of five characters, not a number).  Technically, R does not even assume the character strings can be legitimately interpreted as character data.  Furthermore, most of the variables of interest were answered in the survey from a list of options and some of those options represent a range of values.  Further still, a few values have a meaningful order to them.  For this reason, the values were converted for interpretability when plotting and performing numerical analysis.  The data is imported using the built-in R function ``read.csv``:
+The dataset available from StackOverflow.com is in CSV (Comma-Separated Value) format, contains 79 variables, is over 100 MB (megabytes), and can be viewed using a spreadsheet application like Microsoft Excel.  However, CSV data is a string of characters at its basis with no further meaning (e.g., 1.618 is a string of five characters, not a number).  Technically, R does not even assume the character strings can be legitimately interpreted as character data.  Furthermore, most of the variables of interest were answered in the survey from a list of options and some of those options represent a range of values.  Further still, a few values have a meaningful order to them.  For this reason, the values were converted for interpretability when plotting and performing numerical analysis.  The data is imported using the built-in R function ``read.csv()``:
 
 ## File Importing
 
@@ -92,64 +99,395 @@ keep_column_names <- c(
 dat_selected <- dat_raw[keep_column_names]
 ```
 
+## Variable Splitting
+
+Lorem ipsum
+
+```{r split composite variable: developer type}
+  # Split.
+  dat_selected <- dat_selected %>% separate_longer_delim(c(DevType), delim=";")
+```
+
+Replacement of long value labels omitted for brevity.
+
+```{r replace long labels, include=FALSE}
+  # Capture the frequency count for ordering and filtering.
+  dev_type_cnt <- plyr::count(dat_selected$DevType)
+  # Replace.
+  dat_selected$DevType[dat_selected$DevType == "Cloud infrastructure engineer"] <- "Cloud infrastructure"
+  dat_selected$DevType[dat_selected$DevType == "Data scientist or machine learning specialist"] <- "Data scientist"
+  dat_selected$DevType[dat_selected$DevType == "Developer, desktop or enterprise applications"] <- "Developer, applications"
+  dat_selected$DevType[dat_selected$DevType == "Developer, embedded applications or devices"] <- "Developer, embedded"
+  dat_selected$DevType[dat_selected$DevType == "Developer, game or graphics"] <- "Developer, games/graphics"
+  dat_selected$DevType[dat_selected$DevType == "Marketing or sales professional"] <- "Marketing or sales"
+  dat_selected$DevType[dat_selected$DevType == "Senior Executive (C-Suite, VP, etc.)"] <- "Senior Executive"
+```
+```{r transform categorical variable: developer type}
+  # Transform.
+  dat_selected$DevType.f <- factor(dat_selected$DevType,
+    levels=dev_type_cnt$x[order(dev_type_cnt$freq, decreasing=FALSE)]
+  )
+```
+
 ## Variable Conversion
 
 ### Numeric Variables
 
 The dependent variable for this analysis is annual compensation.  The ``ConvertedCompYearly`` column is used for this value because the ``CompFreq``, ``CompTotal``, ``Country``, and ``Currency`` columns would have be considered collectively with a specific date in order to convert the values to a common currency for comparison.  The values are explicitly converted to numeric values:
 
-```{r convert numerical variables}
-# Convert numerical variables.  Capture logarithmic values in case it is a multimodal distribution that needs to be split.
+```{r transform numerical variable: compensation}
+# Transform numerical variables.  Capture logarithmic values in case it is a multimodal distribution that needs to be split.
 dat_selected$ConvertedCompYearly.n <- as.numeric(as.character(dat_selected$ConvertedCompYearly))
 dat_selected$ConvertedCompYearly.log <- log(dat_selected$ConvertedCompYearly.n)
 ```
 
+```{r transform numerical variable: years code pro}
+dat_selected$YearsCodePro.n <- as.numeric(as.character(dat_selected$YearsCodePro))
+```
+
 ### Categorical Variables
 
+Lorem ipsum
 
+```{r transform categorical variable: gender}
+# Copy variable.
+dat_selected$Gender.f <- dat_selected$Gender
+# Replace all values that are not "Man", "Woman", or NA with "Other".
+dat_selected$Gender.f[!dat_selected$Gender %in% c("Man", "Woman", NA)] <- "Other"
+# Assign dummy values.
+dat_selected$Gender.f[dat_selected$Gender.f == "Man"] <- 0
+dat_selected$Gender.f[dat_selected$Gender.f == "Woman"] <- 1
+dat_selected$Gender.f[dat_selected$Gender.f == "Other"] <- 2
+# Explicitly convert.
+dat_selected$Gender.f <- as.integer(dat_selected$Gender.f)
+dat_selected$Gender.f <- factor(
+  dat_selected$Gender.f,
+  levels=c(0, 1, 2),
+  labels=c("Male", "Female", "Other")
+)
+```
+
+Lorem ipsum
+
+```{r copy variable for transforming: developer type}
+# Transform.
+dat_selected$DevType.f <- factor(dat_selected$DevType)
+```
 
 ### Ordinal Variables
 
+Lorem ipsum
 
+```{r copy variable: organization size}
+# Copy variable.
+dat_selected$OrgSize.o <- dat_selected$OrgSize
+```
 
-## Variable Splitting
+Replacement of character values with integer values omitted for brevity.
 
+```{r replace character values with integers, include=FALSE}
+# Remove Unicode from values.
+dat_selected$OrgSize.o <- gsub("[^[:alnum:]///' .,-]", "", dat_selected$OrgSize.o)
+# Assign dummy values.
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "I dont know"] <- 0
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "Just me - I am a freelancer, sole proprietor, etc."] <- 1
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "2 to 9 employees"] <- 5
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "10 to 19 employees"] <- 15
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "20 to 99 employees"] <- 60
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "100 to 499 employees"] <- 300
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "500 to 999 employees"] <- 750
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "1,000 to 4,999 employees"] <- 3000
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "5,000 to 9,999 employees"] <- 7500
+dat_selected$OrgSize.o[dat_selected$OrgSize.o == "10,000 or more employees"] <- 30000
+# Explicitly convert.
+dat_selected$OrgSize.o <- as.integer(dat_selected$OrgSize.o)
+```
 
+```{r transform ordinal variable: organization size}
+dat_selected$OrgSize.o <- ordered(
+  dat_selected$OrgSize.o,
+  exclude=NULL,
+  levels=c(
+    0, 1, 5, 15, 60,
+    300, 750, 3000, 7500, 30000
+  ),
+  labels=c(
+    "Unknown", "1", "2--9", "10--19", "20--99",
+    "100--499", "500--999", "1,000--4,999", "5,000--9,999", "10,000+"
+  )
+)
+```
+
+## Value Filtering
+
+Lorem ipsum
+
+```{r value filtering}
+# Remove observations without values in the variables in interest.
+dat_sliced <- dat_selected[
+  !is.na(dat_selected$ConvertedCompYearly.n)
+  & !is.na(dat_selected$YearsCodePro.n)
+  & !is.na(dat_selected$Gender.f)
+  & !is.na(dat_selected$OrgSize.o)
+  & !is.na(dat_selected$DevType.f)
+  # Be sure to specify an comma at the end to avoid "undefined columns selected" error.
+  ,
+]
+
+# Remove outliers.
+dat_sliced <- dat_sliced[dat_sliced$ConvertedCompYearly.n < 250000,]
+```
 
 # Methodology
 
+Initially, the study was going to use backward stepwise elimination, but the
+first run took 2 hours, 36 minutes to run and produced a 20 MB linear regression
+summary table (in HTML).  For efficiency, forward stepwise inclusion was used
+when confirming the descriptive statistics (p-value, adj. R^2, and F-stat.) of
+variable in subsequent regressions.  The p-values produced in the initial
+regression were used to prioritize subsequent forward stepwise inclusion of variables.
 
+## Shape of the Data
+
+Lorem ipsum
+
+```{r ConvertedCompYearly density plot, fig.cap="Figure"}
+ggdensity(dat_sliced$ConvertedCompYearly.n,
+  main="Yearly Compensation Density Plot",
+  xlab="Yearly Compensation"
+) +
+geom_vline(aes(xintercept=median(dat_sliced$ConvertedCompYearly.n)),
+  colour="darkgray", linetype="dashed"
+)
+```
+
+Lorem ipsum
+
+```{r YearsCodePro density plot, fig.cap="Figure"}
+ggdensity(dat_sliced$YearsCodePro.n,
+  main="Years Code Pro Density Plot",
+  xlab="Years Coding Professionally",
+  add="median"
+) #+
+#geom_vline(aes(xintercept=median(dat_sliced$YearsCodePro.n)),
+#  colour="darkgray", linetype="dashed"
+#)
+```
+
+Lorem ipsum
+
+```{r Gender frequency bar chart, fig.cap="Figure"}
+f.gender <- barplot(
+  table(dat_sliced$Gender.f),
+  main="Gender Frequency Bar Chart",
+  xlab="Gender"
+)
+```
+
+Lorem ipsum
+
+```{r OrgSize frequency bar chart, fig.cap="Figure"}
+f.orgsize <- barplot(
+  table(dat_sliced$OrgSize.o),
+  main="Org. Size Frequency Bar Chart",
+  xlab="Organization Size"
+)
+```
+
+Lorem ipsum
+
+```{r DevType frequency bar chart, fig.cap="Figure"}
+par(mar=c(5.1, max(4.1, 17/1.8 ), 4.1, 2.1))
+f.devtype <- barplot(
+  table(dat_sliced$DevType.f),
+  main="Dev. Type Frequency Bar Chart",
+  xlab="Frequency",
+  horiz=TRUE,
+  # Labels always: 0: parallel to axis, 1: horizontal,
+  # 2: perpendicular to axis, or 3: vertical.
+  las=1,
+  # Scale axis labels so all will be displayed.
+  cex.names=0.7
+)
+```
+
+Lorem ipsum
+
+```{r ConvertedCompYearly vs. YearsCodePro scatter plot}
+#TODO ConvertedCompYearly vs. YearsCodePro scatter plot
+```
+
+``OrgSize.o`` is not statistically significant, but an upward trend is apparent.  Lorem ipsum
+
+```{r ConvertedCompYearly vs. OrgSize violin, fig.cap="Figure"}
+dat_comp_vs_org_df <- dat_sliced[c("ConvertedCompYearly.n", "OrgSize.o")]
+violin <- ggplot(dat_comp_vs_org_df, aes(y=ConvertedCompYearly.n, x=OrgSize.o))
+violin +
+  geom_violin() +
+  geom_boxplot(width=0.1, aes(middle=mean(ConvertedCompYearly.n))) +
+  labs(title="Compensation vs. Org. Size Violin Plot", x="Org. Size (employees)") +
+  scale_y_continuous(name="Yearly Compensation ($USD)", labels=scales::dollar_format()) +
+  theme(axis.text.x=element_text(angle=30, hjust=1), plot.title=element_text(hjust=0.5))
+```
+
+## Normality of the Data
+
+Lorem ipsum
+
+```{r q-q plot whether normally distributed, fig.cap="Figure"}
+ggqqplot(dat_sliced$ConvertedCompYearly.n, main="Yearly Compensation Q-Q Plot", xlab="Theoretical Quantiles")
+```
+
+The Q-Q (quantile-quantile) plot reveals the data is not normally distributed because of the deviation from the straight line.  A mathematical calculation is still more precise.  For this calculation, Shapiro-Wilk's test (``shapiro.test()``) cannot be used because it supports sample size 3--5000 and the data contains nearly 90,000 samples.  Additionally, the Kolmogorov-Smirnov test (``ks.test()``) does not support "ties" (in this case, two or more developers having the same annual compensation).  Therefor, the Anderson-Darling test (``ad.test()``) was used because its main limitation is supporting a sample size of 7 or more.
+
+$H_{0}$: ``ConvertedCompYearly.n`` is normally distributed, having p-value >= 0.05 (alpha).
+
+$H_{1}$: ``ConvertedCompYearly.n`` is not normally distributed, having p-value < 0.05.
+
+```{r test of normality, fig.cap="Table"}
+ad.test(dat_sliced$ConvertedCompYearly.n)
+```
+
+## Kurtosis and Skewness of the Data
+
+```{r kurtosis of compensation, fig.cap="Table"}
+kurtosis(dat_sliced$ConvertedCompYearly.n)
+```
+
+The kurtosis is >3 indicating the distribution is leptokurtic, meaning there are more outliers than the normal distribution.
+
+```{r skewness of compensation, fig.cap="Table"}
+skewness(dat_sliced$ConvertedCompYearly.n)
+```
+
+The skewness is between 0.5 and 1.0 indicating the distribution is moderately right-skewed, meaning the curve's "tail" tapers to the right.
 
 # Results
 
+## Simple Linear Regressions
 
+Compensation (``ConvertedCompYearly.n``) versus years coding professionally (``YearsCodePro.n``) linear regression model.
+
+```{r, fig.cap="Table"}
+compensationVersusYears_lm <- lm(
+  # Dependent variable versus (~) independent variable(s).
+  ConvertedCompYearly.n ~ YearsCodePro.n,
+  data=dat_sliced
+)
+summary(compensationVersusYears_lm)
+```
+
+Compensation (``ConvertedCompYearly.n``) versus gender (``Gender.f``) linear regression model.
+
+```{r, fig.cap="Table"}
+compensationVersusGender_lm <- lm(
+  # Dependent variable versus (~) independent variable(s).
+  ConvertedCompYearly.n ~ Gender.f,
+  data=dat_sliced
+)
+summary(compensationVersusGender_lm)
+```
+
+Compensation (``ConvertedCompYearly.n``) versus organization size (``OrgSize.o``) linear regression model.  Note, L, Q, C, ^4, ^5, etc. indicate Linear, Quadratic, Cubic, fourth-degree, fifth-degree, etc.
+
+```{r, fig.cap="Table"}
+compensationVersusOrgSize_lm <- lm(
+  # Dependent variable versus (~) independent variable(s).
+  ConvertedCompYearly.n ~ OrgSize.o,
+  data=dat_sliced
+)
+summary(compensationVersusOrgSize_lm)
+```
+
+Compensation (``ConvertedCompYearly.n``) versus developer type (``DevType.f``) linear regression model.
+
+```{r, fig.cap="Table"}
+compensationVersusDevType_lm <- lm(
+  # Dependent variable versus (~) independent variable(s).
+  ConvertedCompYearly.n ~ DevType.f,
+  data=dat_sliced
+)
+summary(compensationVersusDevType_lm)
+```
+
+## Multiple Linear Regression
+
+The goal of the linear regression analysis was to test the null hypothesis, that all independent variables have a coefficient of zero.
+
+$H_{0}$: $\beta_{1} = \beta_{2} = ... = \beta_{k-1} = 0$
+
+$H_{1}$: $\text{At least one }\beta \not= 0\text{ (with p-value} < 0.05)$
+
+Compensation (``ConvertedCompYearly.n``) versus years coding professionally (``YearsCodePro.n``), gender (``Gender.f``), organization size (``OrgSize.o``), and developer type (``DevType.f``) linear regression model.
+
+Linear regression model:
+
+$ConvertedCompYearly.n = \beta_{0} + \beta_{1}*YearsCodePro.n + \beta_{3}*Gender.f + \beta_{3}*OrgSize.o + \beta_{4}*DevType.f + \epsilon$
+
+
+```{r, fig.cap="Table"}
+compensationVersusSignificants_lm <- lm(
+  # Dependent variable versus (~) independent variables.
+  ConvertedCompYearly.n ~ YearsCodePro.n + Gender.f + OrgSize.o + DevType.f,
+  data=dat_sliced
+)
+summary(compensationVersusSignificants_lm)
+```
+
+With a p-value<0.001 (2.2*10^-16), an F-stat.=477.1, and an
+Adj-R2=17.47%, the model is statistically significant and only 17.47% of the variance in ``ConvertedCompYearly.n`` ($Y$) can be explained by the variances in ``YearsCodePro.n`` ($\beta_{1}$), ``Gender.f`` ($\beta_{2}$), ``OrgSize.o`` ($\beta_{3}$), and ``DevType.f`` ($\beta_{4}$).
+
+Linear regression equation:
+
+$ConvertedCompYearly.n_{\$USD} = 37,504.58 + 2,136.98*YearsCodePro.n + (2,877.00*Gender.f_{Female} + 5,054.63*Gender.f_{Other}) + (28,483.77*OrgSize.o_{1} + 6,048.03*OrgSize.o_{2-9} - 8,070.52*OrgSize.o_{10-19} + 5,482.20*OrgSize.o_{20-99} + 5,324.02*OrgSize.o_{100-499} - 2,363.37*OrgSize.o_{500-999} + 667.05*OrgSize.o_{1,000-4,999} + 448.75*OrgSize.o_{5,000-9,999} - 685.12*OrgSize.o_{10,000+}) + (39,380.65*DevType.f_{DevMgr} + 39,125.35*DevType.f_{Executive} + 34,304.25*DevType.f_{EngReliab} + 30,343.22*DevType.f_{CloudInfra} + 26,879.39*DevType.f_{Blockchain} + 25,384.60*DevType.f_{Security} + 23,150.92*DevType.f_{EngData} + 22,681.92*DevType.f_{Marketing} + 22,152.23*DevType.f_{DevOps} + 20,544.55*DevType.f_{DataSci} + 20,227.53*DevType.f_{Other} + 17,096.48*DevType.f_{ProdMgr} + 14,836.39*DevType.f_{DevFull} + 14,278.40*DevType.f_{DevBack} + 13,209.81*DevType.f_{Scientist} + 11,070.15*DevType.f_{DevQA} + 10,686.07*DevType.f_{DevEmbed} + 10,665.28*DevType.f_{ProjMgr} + 10,511.20*DevType.f_{DevGame} + 9,924.32*DevType.f_{DevFront} + 9,860.41*DevType.f_{SysAdmin} + 8,650.64*DevType.f_{DBAdmin} + 8,492.69*DevType.f_{DataAnalyst} + 6,749.46*DevType.f_{DevMobile} + 6,648.03*DevType.f_{Designer} + 6,418.85*DevType.f_{DevApp} + 3,972.77*DevType.f_{Educator} - 9,769.17*DevType.f_{Student})$
+
+## Example
+
+For example, the average IT professional with 8 years experience (coding professionally), is Female, in an organization with ~300 employees, and works in Marketing could expect a yearly compensation of $\$85,483.36 = 37,504.58 + 2,136.98*8_{YearsCodePro} + 2,877.00_{Female} + 5,324.02_{100-499} + 22,681.92_{Marketing}$.  Furthermore, since the survey is from IT professionals all over the world, it is a fairly reasonable assumption that the compensation could be multiplied by the cost of living index to adust expectations.  If the IT professional lived in an area with a cost of living index of 74.1 (that of Murray State University), a reasonable geographic expectation might be more like $\$63,343.17 = \$85,483.36 * 74.1\%_{COLI}$.
 
 # Implications
 
+With the discussion of "equal pay for equal work" (read "equitable pay for similar work") evolving into countless litigation, it would seem that the work environment is decidedly sexist and non-males are compensated less for the same work.  For example, the U.S. Women's National Soccer Team has brought suit for pay discrimination every year from 2019 to 2023.  The media coverage of this gives the impression that they have won, but the reality is much more complicated (Dure, 2022).
 
+It seems that giving the public the impression that women are not equitably compensated has resulted in the opposite result, perhaps because compensation was equitable before the response in the workplace.  Statistical results like this should be referenced when developing workplace policies and practices, instead of referencing a news anchor's opinion or someone's feelings expressed during a press conference.
 
 # Conclusion
 
-cost of living index versus compensation
+This study examined the association of yearly compensation in IT positions against gender and three other variables: years coding professorially, organization size, and developer type.  Using multiple linear regression analysis, it was concluded that not only does gender make a statistically significant difference in yearly compensation, but females make more than men and those who identify as a gender other than male or female make even more than females.
 
-# References
+# References (``citation("library)``)
 \begingroup
 \setlength{\parindent}{-0.5in}
 \setlength{\leftskip}{0.5in}
 \setlength{\parskip}{8pt}
-Bajarin, Tim (April 14, 2020). Four Waves of Personal Computing and the PC’s New Role as an Essential Tool for Survival. Retrieved April 28, 2024 from https://www.forbes.com/sites/timbajarin/2020/04/14/four-waves-of-personal-computing-and-the-pcs-new-role-as-an-essential-tool-for-survival/
+Bache, S., Wickham, H. (2022). _magrittr: A Forward-Pipe Operator for R_. https://CRAN.R-project.org/package=magrittr
 
-Ballenstedt, Brittany (April 29, 2010). Tech Jobs Declined 4 Percent in 2009. Retrieved April 27, 2024 from https://www.nextgov.com/digital-government/2010/04/tech-jobs-declined-4-percent-in-2009/53257/
+Bajarin, Tim (April 14, 2020). _Four Waves of Personal Computing and the PC’s New Role as an Essential Tool for Survival_. Retrieved April 28, 2024 from https://www.forbes.com/sites/timbajarin/2020/04/14/four-waves-of-personal-computing-and-the-pcs-new-role-as-an-essential-tool-for-survival/
+
+Ballenstedt, Brittany (April 29, 2010). _Tech Jobs Declined 4 Percent in 2009_. Retrieved April 27, 2024 from https://www.nextgov.com/digital-government/2010/04/tech-jobs-declined-4-percent-in-2009/53257/
 #
 #Coursera Staff (March 13, 2024). IT Salary Overview: How Much Can You Make? Retrieved April 28, 2024 from https://www.coursera.org/articles/it-salaries-roles-location-and-experience
 
-Hlavac, Marek (2022). stargazer: Well-Formatted Regression and Summary Statistics Tables. https://CRAN.R-project.org/package=stargazer
+Dure, Beau (December 16, 2022). _Did the US women’s soccer team win their ‘equal pay’ case? It’s complicated_. Retrieved May 8, 2024 from https://www.theguardian.com/football/2022/dec/16/uswnt-equal-pay-settlement-case
 
-Inspirisys Solutions (March 5, 2024). Tech layoffs in 2023: Causes, Consequences and Affected Companies. Retrieved April 27, 2024 from https://www.linkedin.com/pulse/tech-layoffs-2023-causes-consequences-affected-companies-inspirisys-bbc6c
+Gross, J., Ligges, U. (2015). _nortest: Tests for Normality_. https://CRAN.R-project.org/package=nortest
 
-Nguyen, Hieu (December 10, 2022). Is Outsourcing Good or Bad? The Economic Effects of Outsourcing. Retrieved April 27, 2024 from https://www.orientsoftware.com/blog/is-outsourcing-good-or-bad/
+Hlavac, Marek (2022). _stargazer: Well-Formatted Regression and Summary Statistics Tables_. https://CRAN.R-project.org/package=stargazer
 
-Shim, Richard (November 19, 2003). A half-million tech jobs lost in 2002, study says. Retrieved April 27, 2024 from https://www.cnet.com/culture/a-half-million-tech-jobs-lost-in-2002-study-says/
+Inspirisys Solutions (March 5, 2024). _Tech layoffs in 2023: Causes, Consequences and Affected Companies_. Retrieved April 27, 2024 from https://www.linkedin.com/pulse/tech-layoffs-2023-causes-consequences-affected-companies-inspirisys-bbc6c
 
-Xie, Y. (2021). knitr: A General-Purpose Package for Dynamic Report Generation in R. https://yihui.org/knitr/
+Kassambara, A. (2023). _ggpubr: Based Publication Ready Plots_. https://CRAN.R-project.org/package=ggpubr
+
+Komsta, L., Novomestky, F. (2022). _moments: Moments, Cumulants, Skewness, Kurtosis and Related
+  Tests_. https://CRAN.R-project.org/package=moments
+
+Nguyen, Hieu (December 10, 2022). _Is Outsourcing Good or Bad? The Economic Effects of Outsourcing_. Retrieved April 27, 2024 from https://www.orientsoftware.com/blog/is-outsourcing-good-or-bad/
+
+Nichols, A. & Zimmerman, S. (May 2008). _Measuring Trends in Income Variability_.  Retrieved April 20, 2024 from https://www.urban.org/sites/default/files/publication/31811/411688-measuring-trends-in-income-variability.pdf
+
+Shim, Richard (November 19, 2003). _A half-million tech jobs lost in 2002, study says_. Retrieved April 27, 2024 from https://www.cnet.com/culture/a-half-million-tech-jobs-lost-in-2002-study-says/
+
+Wickham, H. (2016). _ggplot2: Elegant Graphics for Data Analysis_. https://CRAN.R-project.org/package=ggplot2
+
+Wickham, H., Vaughan, D., Girlich, M. (2024). _tidyr: Tidy Messy Data_. https://CRAN.R-project.org/package=tidyr
 \endgroup
