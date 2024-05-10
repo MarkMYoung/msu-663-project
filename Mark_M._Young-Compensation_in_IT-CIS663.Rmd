@@ -1,6 +1,7 @@
 ---
 title: "Analysis of Annual Compensation in Information Technology"
-author: "Mark M. Young"
+subtitle: "CIS663-01-SP24 Term Project Report"
+author: "Mark M. Young (M00348726)"
 date: "`r format(Sys.time(), '%B %d, %Y')`" # "2024-02-28"
 output:
   word_document:
@@ -251,6 +252,22 @@ regression were used to prioritize subsequent forward stepwise inclusion of vari
 
 Lorem ipsum
 
+```{r yearly compensation vs. years coding scatter plot, fig.cap="Figure"}
+ggscatter(
+  dat_sliced, y="ConvertedCompYearly.n", x="YearsCodePro.n",
+  color="black", size=0.75,
+  conf.int=TRUE,
+  add.params=list(color="darkblue", fill="lightblue", size=0.5),
+  #color="group",
+  add="reg.line"
+) +
+  stat_cor(method="pearson", label.x=30, label.y=-10000) +
+  labs(title="Yearly Compensation vs. Years Coding Professional\nScatter Plot with Linear Regression Line") +
+  scale_y_continuous(name="Yearly Compensation ($USD)", labels=scales::dollar_format())
+```
+
+Lorem ipsum
+
 ```{r ConvertedCompYearly density plot, fig.cap="Figure"}
 ggdensity(dat_sliced$ConvertedCompYearly.n,
   main="Yearly Compensation Density Plot",
@@ -455,7 +472,7 @@ It seems that giving the public the impression that women are not equitably comp
 
 This study examined the association of yearly compensation in IT positions against gender and three other variables: years coding professorially, organization size, and developer type.  Using multiple linear regression analysis, it was concluded that not only does gender make a statistically significant difference in yearly compensation, but females make more than men and those who identify as a gender other than male or female make even more than females.
 
-# References (``citation("library)``)
+# References
 \begingroup
 \setlength{\parindent}{-0.5in}
 \setlength{\leftskip}{0.5in}
