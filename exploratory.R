@@ -115,19 +115,18 @@ if("Gender" %in% colnames(dat_selected))
 {
   #dat_selected$Gender <- as.character(dat_selected$Gender)
   # Copy variable.
-  dat_selected$Gender.f <- dat_selected$Gender
-  # Replace all values that are not "Man", "Woman", or NA with "Other".
-  dat_selected$Gender.f[!dat_selected$Gender %in% c("Man", "Woman", NA)] <- "Other"
+  dat_selected$Gender.d <- dat_selected$Gender
+  # Replace all values that are not "Woman", or NA with "Other".
+  dat_selected$Gender.d[!dat_selected$Gender %in% c("Woman", NA)] <- "Other"
   # Assign dummy values.
-  dat_selected$Gender.f[dat_selected$Gender.f == "Man"] <- 0
-  dat_selected$Gender.f[dat_selected$Gender.f == "Woman"] <- 1
-  dat_selected$Gender.f[dat_selected$Gender.f == "Other"] <- 2
+  dat_selected$Gender.d[dat_selected$Gender.d == "Other"] <- 0
+  dat_selected$Gender.d[dat_selected$Gender.d == "Woman"] <- 1
   # Explicitly convert.
-  dat_selected$Gender.f <- as.integer(dat_selected$Gender.f)
-  dat_selected$Gender.f <- factor(
-    dat_selected$Gender.f,
-    levels=c(0, 1, 2),
-    labels=c("Male", "Female", "Other")
+  dat_selected$Gender.d <- as.integer(dat_selected$Gender.d)
+  dat_selected$Gender.d <- factor(
+    dat_selected$Gender.d,
+    levels=c(0, 1),
+    labels=c("Other", "Female")
   )
 }
 if("RemoteWork" %in% colnames(dat_selected))
@@ -210,27 +209,30 @@ if("OrgSize" %in% colnames(dat_selected))
   #dat_selected$OrgSize <- as.character(dat_selected$OrgSize)
   #sum(is.na(dat_selected$OrgSize))
   # Copy variable.
-  dat_selected$OrgSize.o <- dat_selected$OrgSize
-  #sum(is.na(dat_selected$OrgSize.o))
+  dat_selected$OrgSize.log <- dat_selected$OrgSize
+  #sum(is.na(dat_selected$OrgSize.log))
   # Remove Unicode from values.
-  dat_selected$OrgSize.o <- gsub("[^[:alnum:]///' .,-]", "", dat_selected$OrgSize.o)
+  dat_selected$OrgSize.log <- gsub("[^[:alnum:]///' .,-]", "", dat_selected$OrgSize.log)
   # Assign dummy values.
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "I dont know"] <- 0
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "Just me - I am a freelancer, sole proprietor, etc."] <- 1
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "2 to 9 employees"] <- 5
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "10 to 19 employees"] <- 15
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "20 to 99 employees"] <- 60
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "100 to 499 employees"] <- 300
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "500 to 999 employees"] <- 750
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "1,000 to 4,999 employees"] <- 3000
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "5,000 to 9,999 employees"] <- 7500
-  dat_selected$OrgSize.o[dat_selected$OrgSize.o == "10,000 or more employees"] <- 30000
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "I dont know"] <- NA
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "Just me - I am a freelancer, sole proprietor, etc."] <- log(1)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "2 to 9 employees"] <- log(5)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "10 to 19 employees"] <- log(15)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "20 to 99 employees"] <- log(60)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "100 to 499 employees"] <- log(300)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "500 to 999 employees"] <- log(750)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "1,000 to 4,999 employees"] <- log(3000)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "5,000 to 9,999 employees"] <- log(7500)
+  dat_selected$OrgSize.log[dat_selected$OrgSize.log == "10,000 or more employees"] <- log(30000)
   # Explicitly convert.
-  dat_selected$OrgSize.o <- as.integer(dat_selected$OrgSize.o)
+  dat_selected$OrgSize.log <- as.integer(dat_selected$OrgSize.log)
   
-  #unique(dat_selected$OrgSize.o)
-  dat_selected$OrgSize.o <- ordered(
-    dat_selected$OrgSize.o,
+  # Copy to logarithmic variable.
+  dat_selected$OrgSize.log <- log(dat_selected$OrgSize.log)
+  
+  #unique(dat_selected$OrgSize.log)
+  dat_selected$OrgSize.log <- ordered(
+    dat_selected$OrgSize.log,
     exclude=NULL,
     levels=c(
       0, 1, 5, 15, 60,
@@ -308,10 +310,10 @@ dat_sliced <- dat_selected[
   # Only 2022 dataset.
   #& !is.na(dat_selected$Ethnicity.f)
   # Only 2022 dataset.
-  & !is.na(dat_selected$Gender.f)
+  & !is.na(dat_selected$Gender.d)
   # Only 2023 dataset.
   #& !is.na(dat_selected$Industry.f)
-  & !is.na(dat_selected$OrgSize.o)
+  & !is.na(dat_selected$OrgSize.log)
   & !is.na(dat_selected$YearsCodePro.n)
   # Be sure to specify an comma at the end to avoid "undefined columns selected" error.
   ,
@@ -336,13 +338,13 @@ dat_sliced <- dat_sliced[dat_sliced$ConvertedCompYearly.n < 250000,]
 # 
 #   & !is.na(dat_sliced$YearsCodePro.n)
 #   & !is.na(dat_sliced$DevType.f)
-#   & !is.na(dat_sliced$Gender.f)
+#   & !is.na(dat_sliced$Gender.d)
 #   #& !is.na(dat_sliced$Country.f)
 #   & !is.na(dat_sliced$Age.o)
 #   #& !is.na(dat_sliced$EdLevel.o)
 #   & !is.na(dat_sliced$Employment.f)
 #   & !is.na(dat_sliced$RemoteWork.f)
-#   & !is.na(dat_sliced$OrgSize.o)
+#   & !is.na(dat_sliced$OrgSize.log)
 #   # Only 2022 dataset.
 #   #& !is.na(dat_sliced$Ethnicity.f)
 #   
@@ -361,8 +363,8 @@ dat_sliced <- dat_sliced[dat_sliced$ConvertedCompYearly.n < 250000,]
 #  DevType.f="Dev. Type",
 #  EdLevel.o="Edu. Level",
 #  Ethnicity.f="Ethnicity",
-#  Gender.f="Gender",
-#  OrgSize.o="Org. Size",
+#  Gender.d="Gender",
+#  OrgSize.log="Org. Size",
 #  YearsCodePro.n="Years Coding Pro."
 #)
 #label(dat_sliced) <- as.list(labels[match(names(dat_sliced), names(labels))])
@@ -417,14 +419,14 @@ geom_vline(aes(xintercept=median(dat_sliced$YearsCodePro.n)),
 
 #Figure
 f.gender <- barplot(
-  table(dat_sliced$Gender.f),
+  table(dat_sliced$Gender.d),
   main="Gender Frequency Bar Chart",
   xlab="Gender"
 )
 
 #Figure
 f.orgsize <- barplot(
-  table(dat_sliced$OrgSize.o),
+  table(dat_sliced$OrgSize.log),
   main="Org. Size Frequency Bar Chart",
   xlab="Organization Size"
 )
@@ -523,13 +525,13 @@ linearModelCompensationVersus <- function(data, depVar, indVar)
       #DevType.f * # SOME are significant. 
       ##Country.f + # NOT significant.
       ## Independent variable.
-      #Gender.f * # Significant. 
+      #Gender.d * # Significant. 
       ##Ethnicity.f, # SOME are significant.
       ## Independent variable.
       #Age.o + # NOT significant.
       # Control variables.
       # Employment.f would have to be split to be considered.
-      Age.o + EdLevel.o + OrgSize.o,
+      Age.o + EdLevel.o + OrgSize.log,
     # data.frame
     data=data
   )
@@ -538,7 +540,7 @@ linearModelCompensationVersus <- function(data, depVar, indVar)
 #proc_time <- proc.time()
 
 # There was statistically insignificant (Adj. R^2 0.144, d.f. 1644) upward trend in compensation.
-#compensationVersusOrgSize_lm <- linearModelCompensationVersus(dat_sliced, "ConvertedCompYearly.n", "OrgSize.o")
+#compensationVersusOrgSize_lm <- linearModelCompensationVersus(dat_sliced, "ConvertedCompYearly.n", "OrgSize.log")
 #summary(compensationVersusOrgSize_lm)
 
 #Result?
@@ -558,7 +560,7 @@ compensationVersusDevType_report <- capture.output(
 #Result?
 compensationVersusGender_lm <- lm(
   # Dependent variable versus (~) independent variable(s).
-  ConvertedCompYearly.n ~ Gender.f,
+  ConvertedCompYearly.n ~ Gender.d,
   data=dat_sliced
 )
 summary(compensationVersusGender_lm)
@@ -569,7 +571,7 @@ compensationVersusGender_report <- capture.output(
 #Result?
 compensationVersusOrgSize_lm <- lm(
   # Dependent variable versus (~) independent variable(s).
-  ConvertedCompYearly.n ~ OrgSize.o,
+  ConvertedCompYearly.n ~ OrgSize.log,
   data=dat_sliced
 )
 summary(compensationVersusOrgSize_lm)
@@ -599,19 +601,19 @@ compensationVersusSignificants_lm <- lm(
   # Dependent variable versus...
   ConvertedCompYearly.n ~
     # Independent variables.
-    YearsCodePro.n + Gender.f + OrgSize.o + DevType.f
+    YearsCodePro.n + OrgSize.log + Gender.d + YearsCodePro.n + DevType.f
     #YearsCodePro.n * # Significant!
     ## Independent variable.
     #DevType.f * # SOME are significant. 
     ##Country.f + # NOT significant.
     ## Independent variable.
-    #Gender.f * # Significant. 
+    #Gender.d * # Significant. 
     ##Ethnicity.f, # SOME are significant.
     ## Independent variable.
     #Age.o + # NOT significant.
     # Control variables.
     # Employment.f would have to be split to be considered.
-  #Age.o + EdLevel.o + OrgSize.o
+  #Age.o + EdLevel.o + OrgSize.log
   ,
   # data.frame
   data=dat_sliced
@@ -647,15 +649,27 @@ ggscatter(
   labs(title="Yearly Compensation vs. Years Coding Professional\nScatter Plot with LOESS Regression Line") +
   scale_y_continuous(name="Yearly Compensation ($USD)", labels=scales::dollar_format())
 #Figure
-# OrgSize.o is not statistically significant, but an upward trend can be seen.
-dat_comp_vs_org_df <- dat_sliced[c("ConvertedCompYearly.n", "OrgSize.o")]
+ggscatter(
+  dat_sliced, y="ConvertedCompYearly.n", x="OrgSize.log",
+  color="black", size=0.75,
+  conf.int=TRUE,
+  add.params=list(color="darkblue", fill="lightblue", size=0.5),
+  #color="group",
+  add="reg.line"
+) +
+  stat_cor(method="pearson", label.x=6, label.y=-10000) +
+  labs(title="Yearly Compensation vs. Organization Size\nScatter Plot with Linear Regression Line") +
+  scale_y_continuous(name="Yearly Compensation ($USD)", labels=scales::dollar_format())
+#Figure
+# OrgSize.log is not statistically significant, but an upward trend can be seen.
+dat_comp_vs_org_df <- dat_sliced[c("ConvertedCompYearly.n", "OrgSize.log")]
 #max(dat_comp_vs_org$ConvertedCompYearly.n)
 #sum(is.na(dat_comp_vs_org$ConvertedCompYearly.n))
-violin <- ggplot(dat_comp_vs_org_df, aes(y=ConvertedCompYearly.n, x=OrgSize.o))
+violin <- ggplot(dat_comp_vs_org_df, aes(y=ConvertedCompYearly.n, x=OrgSize.log))
 violin +
   geom_violin() + #draw_quantiles=c(0.25, 0.5, 0.75)
   geom_boxplot(width=0.1, aes(middle=mean(ConvertedCompYearly.n))) +
-  #geom_smooth(mapping=aes(y=ConvertedCompYearly.n, x=OrgSize.o), color="black", method="lm", linewidth=1, se=T) +
+  #geom_smooth(mapping=aes(y=ConvertedCompYearly.n, x=OrgSize.log), color="black", method="lm", linewidth=1, se=T) +
   labs(title="Compensation vs. Org. Size Violin Plot", x="Org. Size (employees)") +
   scale_y_continuous(name="Yearly Compensation ($USD)", labels=scales::dollar_format()) +
   theme(axis.text.x=element_text(angle=30, hjust=1), plot.title=element_text(hjust=0.5))
@@ -665,3 +679,5 @@ violin +
 compVsOrgSizeLM <-lm(ConvertedCompYearly.imputed ~ OrgSize, data=dat_sliced)
 stargazer(compVsOrgSizeLM, type="text", align=TRUE)
 #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=#
+median(dat_sliced[dat_sliced$Gender.f=="Female",]$ConvertedCompYearly)
+median(dat_sliced[dat_sliced$Gender.f=="Other",]$ConvertedCompYearly)
